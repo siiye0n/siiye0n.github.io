@@ -1,9 +1,5 @@
-// 간단한 정적 클라이언트 — GitHub Pages에서 바로 동작
-// 주의: CORS가 차단되면 실패. 그런 경우 PROXY_URL을 설정(Cloudflare Worker 등)하세요.
-
 const DEFAULT_TARGET_NICK = '애교용';
-// PROXY_URL: 빈 문자열이면 직접 API 호출. 프록시가 있을 때는 프록리 베이스 URL을 넣으세요.
-// 예: 'https://your-worker.example.workers.dev'
+
 let PROXY_URL = '';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -147,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.found) setStatus('하이라이트 댓글을 찾았습니다. (자동 복사 시도)', 'success');
       else setStatus('일치하는 댓글 없음 — 게시글 링크만 제공', 'secondary');
 
-      // 자동 복사 시도
+    
       try {
         if (resultLink.value) {
           await navigator.clipboard.writeText(resultLink.value);
@@ -177,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   useProxyBtn.addEventListener('click', async () => {
-    // 간단한 토글 UI: 사용자에게 프록시 URL 입력 받음
+   
     const current = PROXY_URL || '(직접 호출)';
     const input = prompt('프록시(Cloudflare Worker 등) 베이스 URL을 입력하세요.\n예: https://your-worker.example.workers.dev\n비워두면 직접 호출로 돌아갑니다.', PROXY_URL);
     if (input === null) return;
@@ -186,3 +182,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
