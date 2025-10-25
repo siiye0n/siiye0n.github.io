@@ -1,159 +1,285 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ㅇㄴㅇ</title>
-
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ㅇㄴㅇ </title>
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=2">
 
-
-
 <style>
-  body {
-    font-family: 'Segoe UI', Pretendard, sans-serif;
-    background: linear-gradient(135deg, #1a1b26, #232946);
+  :root{
+    --bg1:#0f1724;
+    --card:#0b1220;
+    --accent1:#ff7ab6;
+    --accent2:#ffd7ef;
+    --muted:#93a6cc;
+    --status-pink:#ff9bd6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font-family: Inter, "Segoe UI", Pretendard, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    background: linear-gradient(135deg,var(--bg1), #121421 60%, #0b1220);
     color: #e6eef8;
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    padding: 48px;
-    font-size: 2rem;
-    user-select: none;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:54px;
+    line-height:1.45;
   }
-  h1 { font-size: 3.8rem; font-weight: 700; color: #ffaad4; margin-bottom: 2.4rem; text-shadow: 0 0 16px rgba(255,170,212,0.35);}
-  .container { background: rgba(255,255,255,0.04); border-radius: 32px; padding: 56px; box-shadow:0 12px 40px rgba(0,0,0,0.4); width:100%; max-width:1280px; text-align:center;}
-  .input-wrap { display:flex; gap:20px; align-items:center; justify-content:center; margin-bottom:28px; }
-  .input-wrap .form-control { flex:1; background:transparent; border-radius:20px; color:#e6eef8; border:3px solid rgba(255,122,182,0.35); padding:24px 28px; transition:all 0.2s; font-size:2rem; user-select:text; }
-  .input-wrap .form-control:focus { border-color:#ffaad4; box-shadow:0 0 12px rgba(255,170,212,0.32); outline:none; }
-  button { background: linear-gradient(90deg, #ff7ab6,#ffaad4); border:none; border-radius:16px; padding:20px 28px; color:white; font-weight:600; cursor:pointer; transition: transform .15s ease; font-size:2rem;}
-  button:disabled { opacity:0.6; cursor:default; transform:none;}
-  #status { margin-top:16px; font-size:1.9rem; color:#9eb7e5;}
-  #result-box { margin-top:28px; padding:24px 28px; background: rgba(255,255,255,0.03); border-radius:20px; display:flex; gap:20px; align-items:center; justify-content:space-between; border:2px solid rgba(255,255,255,0.02); font-size:2rem; word-break: break-word; user-select:text; }
-  #result-link { color:#ffd7ef; text-decoration:none; flex:1; user-select:text;}
-  #result-placeholder { color:#93a6cc; flex:1; }
-  #manualCopyBtn { display:none; padding:16px 24px; font-size:1.8rem; border-radius:12px; background:#ff7ab6; color:white; border:none; cursor:pointer; }
-  .spinner { display:inline-block; width:32px;height:32px;border:4px solid rgba(255,255,255,0.12);border-top-color:#fff;border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:16px;}
-  @keyframes spin { to { transform: rotate(360deg);} }
-  #toast { position:fixed; bottom:40px; left:50%; transform:translateX(-50%); background: rgba(34,197,94,0.95); color:#fff; padding:16px 32px; font-size:2rem; border-radius:16px; opacity:0; pointer-events:none; transition:opacity 0.4s ease, transform 0.4s ease; z-index:9999;}
-  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  
-  @media (max-width:768px){
-    body { font-size:1.6rem; padding:24px;}
-    h1 { font-size:2.8rem;}
-    .input-wrap { flex-direction:column; gap:16px;}
-    .input-wrap button { width:100%; padding:16px; font-size:1.8rem;}
-    .input-wrap .form-control { padding:16px 20px; font-size:1.6rem;}
-    #result-box { flex-direction:column; align-items:stretch; gap:16px; font-size:1.6rem;}
-    #manualCopyBtn { width:100%; }
-    #toast { bottom:20px; padding:12px 20px; font-size:1.6rem; border-radius:12px; }
+  .wrap{ width:100%; max-width:980px; margin:0 auto; }
+
+  .container{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:30px;
+    padding:42px;
+    box-shadow: 0 18px 60px rgba(2,6,23,0.6);
+    border: 1px solid rgba(255,255,255,0.03);
   }
+
+  header.top{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:9px;
+    margin-bottom:27px;
+    text-align:center;
+  }
+  .title h1{
+    margin:0;
+    font-size:42px;
+    letter-spacing:-0.6px;
+    color:var(--accent2);
+  }
+  .title p{ margin:0; color:var(--muted); font-size:21px }
+
+  .input-row{
+    display:flex;
+    gap:18px;
+    align-items:center;
+    margin-top:18px;
+  }
+  .form-control{
+    flex:1;
+    background:transparent;
+    border-radius:18px;
+    padding:18px 21px;
+    font-size:22px;
+    color: #e6eef8;
+    border: 1px solid rgba(255,255,255,0.06);
+    outline: none;
+  }
+  .form-control::placeholder{ color: rgba(230,238,248,0.45); }
+
+  .btn{
+    background: linear-gradient(90deg,var(--accent1), #ff9bd6);
+    border:none;
+    color:white;
+    padding:16px 21px;
+    border-radius:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow: 0 12px 28px rgba(255,122,182,0.10);
+    font-size:22px;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .status{ margin-top:15px; font-size:20px; color:var(--muted); text-align:center; min-height:28px }
+
+  #result-box{
+    margin-top:30px;
+    padding:24px;
+    border-radius:18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    border:1px solid rgba(255,255,255,0.02);
+    min-height:144px;
+  }
+
+  .result-list{ display:flex; flex-direction:column; gap:18px; align-items:center; }
+
+  .result-item{
+    width:100%;
+    max-width:820px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    border-radius:21px;
+    padding:21px 27px;
+    box-shadow: 0 9px 45px rgba(2,6,23,0.55);
+    border: 1px solid rgba(255,255,255,0.03);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:15px;
+  }
+
+  .result-top{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+  }
+
+  .result-link{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 18px;
+    border-radius:15px;
+    background: linear-gradient(90deg,var(--accent1), #ff9bd6);
+    color:white;
+    text-decoration:none;
+    font-weight:800;
+    box-shadow: 0 9px 28px rgba(6,10,30,0.45);
+    transition: transform .12s ease, box-shadow .12s;
+    font-size:20px;
+    border: none;
+  }
+  .result-link:hover{ transform: translateY(-4px); box-shadow: 0 16px 36px rgba(6,10,30,0.6); }
+
+ 
+  .copy-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 18px;
+    border-radius:15px;
+    background: linear-gradient(90deg,var(--accent1), #ff9bd6);
+    color:white;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow: 0 9px 28px rgba(6,10,30,0.45);
+    transition: transform .12s ease, box-shadow .12s;
+    font-size:20px;
+    border: none;
+  }
+  .copy-btn:hover{ transform: translateY(-4px); box-shadow: 0 16px 36px rgba(6,10,30,0.6); }
+
+  .snippet{
+    max-width:86%;
+    color:#cfe5ff;
+    font-size:15px; 
+    line-height:1.6;
+    white-space:pre-wrap;
+    word-break:break-word;
+    opacity:0.95;
+  }
+
+  .fallback{
+    color:var(--muted);
+    text-align:center;
+    padding:27px 0;
+    font-size:22px;
+  }
+
+  .spinner{display:inline-block;width:27px;height:27px;border:4px solid rgba(255,255,255,0.08);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+ 
+  @keyframes blinkStatus {
+    0%,100% { opacity: 1; transform: translateY(0); }
+    50% { opacity: 0.55; transform: translateY(-2px); }
+  }
+  .blink {
+    animation: blinkStatus 1.2s ease-in-out 2;
+  }
+
+  @media (max-width:640px){
+    body{padding:30px}
+    .container{padding:30px}
+    .title h1{font-size:30px}
+    .form-control{font-size:18px;padding:14px 16px}
+    .btn{font-size:18px;padding:12px 16px}
+    .status{font-size:16px}
+    .result-item{padding:16px}
+    .snippet{font-size:15px; max-width:92%}
+    .result-link, .copy-btn{font-size:18px; padding:10px 14px}
+  }
+
+
+.input-row { position: relative; display:flex; gap:8px; align-items:center; }
+
+
+.input-row { position: relative; display:flex; gap:8px; align-items:center; }
+
+
+.clear-btn{ display: none; opacity: 0; pointer-events: none; transition: opacity .12s ease; }
+.input-row.has-value .clear-btn{ display: inline-flex; opacity: 1; pointer-events: auto; }
+.clear-btn:hover{ opacity:0.95; transform:translateY(-2px); }
+
+.clear-btn:hover{ opacity:0.9; }
+
+
+
+.input-wrap{ position: relative; flex:1; display:block; }
+.input-wrap .form-control{ width:100%; padding-right:46px; box-sizing:border-box; }
+.input-wrap .clear-btn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); z-index:3; display:none; opacity:0; pointer-events:none; }
+.input-row.has-value .input-wrap .clear-btn{ display:inline-flex; opacity:1; pointer-events:auto; }
+
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1>애교용 하이라이트 댓글</h1>
-    <div class="input-wrap">
-      <input id="urlInput" class="form-control" placeholder="게시글 URL을 입력하세요 (예: .../post/12345)" />
-      <button id="fetchBtn">🔍 찾기</button>
-    </div>
-    <div id="status">즐찾이 필요한 게시글은 지원이 안됩니다.</div>
-    <div id="result-box">
-      <div id="result-placeholder">링크가 여기 생성됩니다.</div>
-      <a id="result-link" href="#" target="_blank" rel="noopener" style="display:none"></a>
-      <button id="manualCopyBtn">복사</button>
+  <div class="wrap">
+    <div class="container">
+      <header class="top">
+        <div class="title">
+          <h1>하이라이트 댓글</h1>
+          <p>'애교용' 댓글을 찾아 하이라이트 댓글 만들기</p>
+        </div>
+      </header>
+
+      <div class="input-row">
+        <div class="input-wrap">
+          <input id="urlInput" class="form-control" placeholder="게시글 URL 입력 (예: https://.../post/12345)" />
+          <button id="clearBtn" class="clear-btn" type="button" aria-label="입력값 지우기">✕</button>
+        </div>
+
+        <button id="fetchBtn" class="btn">🔍 찾기</button>
+      </div>
+      <div class="status" id="status">※ 즐찾이 필요한 게시글은 지원이 안됩니다.</div>
+
+      <div id="result-box">
+        <div id="result-placeholder" class="fallback">결과가 여기 표시됩니다.</div>
+        <div id="resultsList" class="result-list" style="display:none"></div>
+      </div>
     </div>
   </div>
-  <div id="toast">링크가 클립보드에 복사되었습니다!</div>
+
+<script src="script.js" defer></script>
 
 <script>
-(async function(){
-  const DEFAULT_TARGET_NICK = '애교용';
-  const MAX_PAGES = 50;
-  const fetchBtn = document.getElementById('fetchBtn');
-  const urlInput = document.getElementById('urlInput');
-  const statusEl = document.getElementById('status');
-  const resultLinkEl = document.getElementById('result-link');
-  const resultPlaceholder = document.getElementById('result-placeholder');
-  const manualCopyBtn = document.getElementById('manualCopyBtn');
-  const toastEl = document.getElementById('toast');
-
-  
-  document.addEventListener('contextmenu', e => e.preventDefault(), { capture: true });
-  
-  document.addEventListener('selectstart', e => {
-    if(['urlInput','result-box','result-link','manualCopyBtn'].includes(e.target.id)) return;
-    e.preventDefault();
-  });
-
-  function setStatus(txt,color){ statusEl.textContent=txt; statusEl.style.color=color||''; }
-  function showToast(){ toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),3000); }
-  function setLoading(on){ if(on){ fetchBtn.disabled=true; fetchBtn.innerHTML='<span class="spinner"></span>검색중...'; }else{ fetchBtn.disabled=false; fetchBtn.textContent='🔍 찾기'; } }
-  function normalizeNick(s){ try{return s.normalize('NFKC').toLowerCase().trim(); } catch{return String(s).toLowerCase().trim();} }
-  function parseIdsFromUrl(url){
-    try{
-      let m=url.match(/\/station\/([^/]+)\/post\/(\d+)/); if(m) return {sid:m[1],tn:m[2]};
-      let m2=url.match(/\/([^/]+)\/post\/(\d+)/); if(m2) return {sid:m2[1],tn:m2[2]};
-      let m3=url.match(/\/post\/(\d+)/); if(m3) return {sid:'',tn:m3[1]};
-    }catch(e){}
-    return {sid:null,tn:null};
-  }
-  function buildCommentUrl(sid,tn,page){ const base=sid?`https://chapi.sooplive.co.kr/api/${sid}/title/${tn}/comment`:`https://chapi.sooplive.co.kr/api/title/${tn}/comment`; return page?`${base}?page=${page}`:base; }
-  async function fetchJson(url){ const res=await fetch(url,{headers:{'Accept':'application/json'}}); if(!res.ok)throw new Error(`HTTP ${res.status}`); return res.json(); }
-  async function fetchAllComments(sid,tn){
-    const firstRaw=await fetchJson(buildCommentUrl(sid,tn));
-    const lastPage=Math.min((firstRaw.meta?.last_page||1),MAX_PAGES);
-    const pages=Array.from({length:lastPage},(_,i)=>buildCommentUrl(sid,tn,i+1));
-    const results=await Promise.all(pages.map(u=>fetchJson(u).catch(()=>null)));
-    const comments=[];
-    for(const raw of results){
-      const list=raw?.data||raw?.comments||[];
-      for(const c of list){ comments.push({user_nick:c.user_nick||c.user_name||c.nick||c.nickname||'', comment_no:c.p_comment_no||c.c_comment_no||c.comment_no, c_comment_cnt:c.c_comment_cnt||0}); }
+(function(){
+  function syncClear(){
+    try {
+      var urlInput = document.getElementById('urlInput');
+      var inputRow = document.querySelector('.input-row');
+      var clearBtn = document.getElementById('clearBtn');
+      if(!urlInput || !inputRow || !clearBtn) return;
+      function toggle(){
+        if(urlInput.value && urlInput.value.trim() !== ''){
+          inputRow.classList.add('has-value');
+        } else {
+          inputRow.classList.remove('has-value');
+        }
+      }
+      urlInput.addEventListener('input', toggle);
+      urlInput.addEventListener('change', toggle);
+      clearBtn.addEventListener('click', function(){ urlInput.value=''; toggle(); urlInput.focus(); });
+      toggle();
+    } catch(e) {
+      console.error('syncClear error', e);
     }
-    return comments;
   }
-  function makePostUrl(sid,tn,commentNo){ const hash=commentNo?`#comment_noti${commentNo}`:''; return `https://www.sooplive.co.kr/${sid?sid+'/':''}post/${tn}${hash}`; }
-  async function pickHighlight(url){
-    const {sid,tn}=parseIdsFromUrl(url);
-    const items=await fetchAllComments(sid,tn);
-    const tNorm=normalizeNick(DEFAULT_TARGET_NICK);
-    for(const it of items){ if(normalizeNick(it.user_nick)===tNorm) return makePostUrl(sid,tn,it.comment_no); }
-    return makePostUrl(sid,tn,null);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncClear);
+  } else {
+    syncClear();
   }
-
-  async function handleClick(){
-    const url=urlInput.value.trim();
-    resultPlaceholder.style.display=''; resultLinkEl.style.display='none'; manualCopyBtn.style.display='none';
-    if(!url) return setStatus('URL을 입력하세요.', '#ef4444');
-    setLoading(true);
-    try{
-      const link=await pickHighlight(url);
-      resultPlaceholder.style.display='none';
-      resultLinkEl.style.display='';
-      resultLinkEl.textContent=link; resultLinkEl.href=link;
-      try{ await navigator.clipboard.writeText(link); setStatus('하이라이트 링크 자동 복사됨 🎀', '#22c55e'); showToast(); } 
-      catch(e){ setStatus('자동 복사 실패 — 수동 버튼 사용', '#facc15'); manualCopyBtn.style.display='inline-block'; }
-    }catch(e){ setStatus('실패: '+e.message, '#ef4444'); console.error(e);}
-    finally{ setLoading(false); }
-  }
-
-  fetchBtn.addEventListener('click',handleClick);
-  urlInput.addEventListener('keydown',e=>{ if(e.key==='Enter') handleClick(); });
-  manualCopyBtn.addEventListener('click',async()=>{
-    try{ await navigator.clipboard.writeText(resultLinkEl.href); showToast(); setStatus('링크 복사 완료 🎀','#22c55e'); manualCopyBtn.style.display='none';}
-    catch(e){ alert('복사 실패, 수동으로 복사하세요: '+resultLinkEl.href);}
-  });
-
 })();
 </script>
+
 </body>
 </html>
-
-
