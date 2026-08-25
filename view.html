@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>캐치보드 · PC 멀티뷰</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"/>
+<style>
+:root{
+  --bg:#0f1115; --panel:#191c22; --panel2:#20242c; --line:#282d36;
+  --ink:#eef1f6; --sub:#9aa1ad; --sub2:#6b7280; --accent:#5b8cff;
+  --soop:#00c9a7; --yt:#ff4b4b; --tw:#a970ff; --cz:#00ffa3;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+  font-family:Pretendard Variable,Pretendard,system-ui,sans-serif;font-size:14px;}
+.app{height:100vh;display:flex;flex-direction:column;}
+
+.bar{flex:none;display:flex;align-items:center;gap:9px;padding:9px 13px;
+  background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.bar h1{font-size:14px;font-weight:800;margin:0 4px 0 0;white-space:nowrap;}
+.bar h1 em{font-style:normal;color:var(--sub2);font-weight:600;font-size:11px;margin-left:5px;}
+input[type=text]{font:inherit;font-size:12.5px;padding:7px 11px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel2);color:var(--ink);width:320px;}
+input::placeholder{color:var(--sub2);}
+.findwrap{position:relative;}
+button{font:inherit;font-size:12px;font-weight:700;padding:7px 11px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer;
+  transition:background .12s;white-space:nowrap;}
+button:hover{background:#2a2f38;}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+button.pri{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sep{width:1px;height:20px;background:var(--line);}
+.lbl{font-size:11px;color:var(--sub2);}
+.sp{flex:1;}
+
+/* 보드 — 타일을 절대 위치로 자유 배치 */
+.board{flex:1;min-height:0;position:relative;overflow:hidden;background:var(--bg);}
+/* 전체화면일 땐 board 자체가 화면 전체가 된다(상단 툴바 제외) */
+.board:fullscreen{width:100vw;height:100vh;padding:0;}
+.board:-webkit-full-screen{width:100vw;height:100vh;padding:0;}
+.tile{position:absolute;background:#000;border-radius:9px;overflow:hidden;
+  border:1px solid var(--line);display:flex;flex-direction:column;
+  box-shadow:0 4px 18px rgba(0,0,0,.4);}
+.tile.main{outline:2px solid var(--accent);outline-offset:-2px;}
+.th{flex:none;display:flex;align-items:center;gap:6px;padding:5px 7px;
+  background:var(--panel);border-bottom:1px solid var(--line);cursor:move;
+  user-select:none;}
+.dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.dot.soop{background:var(--soop);} .dot.youtube{background:var(--yt);}
+.dot.twitch{background:var(--tw);} .dot.chzzk{background:var(--cz);}
+.th b{flex:1;font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;min-width:0;}
+/* 자리 번호 버튼 — 누르면 그 번호 자리의 타일과 위치·크기를 맞바꾼다.
+   타일이 늘어나도 헤더가 터지지 않게 작게 유지하고, 이름(b)이 먼저 줄어들도록 flex:none. */
+.th .nums{display:flex;gap:2px;margin-left:6px;flex:none;}
+.th .nums .num{padding:0;width:17px;height:17px;font-size:9.5px;font-weight:800;
+  border-radius:5px;line-height:1;display:grid;place-items:center;
+  background:var(--panel2);border:1px solid var(--line);color:var(--sub);}
+.th .nums .num:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+.th .nums .num.cur{background:var(--line);color:var(--ink);cursor:default;}
+.th .nums .num.cur:hover{background:var(--line);border-color:var(--line);color:var(--ink);}
+.th .acts{margin-left:6px;display:flex;gap:3px;flex:none;}
+.th .acts button{padding:3px 7px;font-size:10.5px;font-weight:600;}
+.th .acts button.chat.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+.tile iframe{flex:1;width:100%;border:0;background:#000;}
+
+/* 8방향 리사이즈 핸들 */
+.hd{position:absolute;z-index:5;}
+.hd.n{top:-3px;left:10px;right:10px;height:8px;cursor:ns-resize;}
+.hd.s{bottom:-3px;left:10px;right:10px;height:8px;cursor:ns-resize;}
+.hd.w{left:-3px;top:10px;bottom:10px;width:8px;cursor:ew-resize;}
+.hd.e{right:-3px;top:10px;bottom:10px;width:8px;cursor:ew-resize;}
+.hd.nw{top:-3px;left:-3px;width:14px;height:14px;cursor:nwse-resize;}
+.hd.ne{top:-3px;right:-3px;width:14px;height:14px;cursor:nesw-resize;}
+.hd.sw{bottom:-3px;left:-3px;width:14px;height:14px;cursor:nesw-resize;}
+.hd.se{bottom:-3px;right:-3px;width:14px;height:14px;cursor:nwse-resize;}
+.tile.se-hint .hd.se::after{content:"";position:absolute;right:3px;bottom:3px;
+  width:7px;height:7px;border-right:2px solid var(--sub2);border-bottom:2px solid var(--sub2);}
+
+/* 드래그 중 iframe이 포인터를 가로채지 않게 */
+body.busy{user-select:none;}
+body.busy iframe{pointer-events:none;}
+
+.hint{position:absolute;inset:0;display:grid;place-items:center;padding:30px;
+  text-align:center;color:var(--sub2);font-size:13px;line-height:2;}
+.hint code{background:var(--panel2);padding:2px 7px;border-radius:5px;font-size:11.5px;color:var(--sub);}
+.hint strong{color:var(--ink);display:block;margin-bottom:10px;font-size:15px;}
+
+/* 전체화면 중에만 뜨는 나가기 버튼 — 툴바가 안 보이니 여기서 빠져나갈 수단이 필요하다.
+   평소엔 숨어 있다가 전체화면일 때만 우상단에 나타나고, 마우스를 올려야 진해진다. */
+#fsExit{position:absolute;right:12px;top:12px;z-index:999;display:none;opacity:.25;
+  transition:opacity .15s;}
+#fsExit:hover{opacity:1;}
+.board:fullscreen #fsExit,.board:-webkit-full-screen #fsExit{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <h1>PC 멀티뷰<em>여러 플랫폼 동시 시청 · 봇 연결 불필요</em></h1>
+    <div class="findwrap">
+      <input type="text" id="url" placeholder="SOOP 아이디 · 유튜브/트위치/치지직 주소"/>
+    </div>
+    <button class="pri" id="add">＋ 추가</button>
+
+    <div class="sep"></div>
+    <span class="lbl">정렬</span>
+    <button id="tile">바둑판</button>
+    <button id="spotBtn">스포트라이트</button>
+    <button id="cascade">계단식</button>
+
+    <div class="sep"></div>
+    <button id="fs">⛶ 전체화면</button>
+    <button id="pip" title="항상 위에 떠 있는 PiP (유튜브는 안 될 수 있음)">🗗 PiP</button>
+    <button id="newwin" title="일반 새 창 (유튜브 포함 확실히 됨, 항상 위는 아님)">🪟 새 창</button>
+
+    <div class="sp"></div>
+    <button id="clear">비우기</button>
+  </div>
+
+  <div class="board" id="board">
+    <button id="fsExit" title="전체화면 나가기 (ESC)">⛶ 나가기</button>
+  </div>
+</div>
+
+<script>
+const board=document.getElementById("board");
+const G=6, MINW=200, MINH=130;
+let items=[], seq=0, topZ=10, pipWin=null, mainUid=null;
+let lastW=0, lastH=0;
+
+/* ── 주소 파싱 ── */
+function parse(raw){
+  const url=(raw||"").trim();
+  if(!url) return null;
+  const yt=url.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
+  if(yt) return {type:"youtube",id:yt[1],label:"YouTube · "+yt[1],raw:url};
+  const tw=url.match(/twitch\.tv\/([A-Za-z0-9_]+)/);
+  if(tw) return {type:"twitch",id:tw[1],label:"Twitch · "+tw[1],raw:url};
+  if(/chzzk\.naver\.com/.test(url)){
+    const cid=(url.match(/([0-9a-fA-F]{20,})/)||[])[1]||"";
+    return {type:"chzzk",id:cid,label:"치지직 · "+(cid?cid.slice(0,8):"?"),raw:url};
+  }
+  const sp=url.match(/(?:sooplive\.com|sooplive\.co\.kr|afreecatv\.com)\/(?:station\/)?([A-Za-z0-9_]+)(?:\/(\d+))?/);
+  if(sp && !["player","live","embed","station","video"].includes(sp[1]))
+    return {type:"soop",id:sp[1],bno:sp[2]||"",label:"SOOP · "+sp[1],raw:url,chat:false};
+  if(/^[A-Za-z0-9_]+$/.test(url))
+    return {type:"soop",id:url,bno:"",label:"SOOP · "+url,raw:url,chat:false};
+  if(/^https?:\/\//.test(url)) return {type:"video",id:url,label:url.split("/").pop()||url,raw:url};
+  return null;
+}
+function embedUrl(s){
+  if(s.type==="youtube"){
+    // ★ 2026-08-24: origin 파라미터는 유튜브 JS Player API(postMessage로 재생/정지 등을
+    // 제어할 때)의 보안 검증용인데, 이 페이지는 그 API를 아예 안 쓴다(iframe 끼워 넣고
+    // 자동재생만 시킴) — 즉 우리한테는 있으나 마나였다. 그런데 PiP로 iframe을 다른
+    // 문서(창)로 옮기면 그 문서의 origin/referrer 가 이 파라미터랑 안 맞다고 유튜브가
+    // 오류 152/153을 냈다. file:// 대응으로 조건부로 빼던 걸 아예 통째로 없앤다 —
+    // 안 쓰는 검증을 굳이 넣어서 PiP 이동 같은 정상적인 상황까지 걸릴 이유가 없다.
+    return "https://www.youtube.com/embed/"+s.id
+      +"?autoplay=1&playsinline=1&modestbranding=1&rel=0";
+  }
+  if(s.type==="twitch")
+    return "https://player.twitch.tv/?channel="+s.id+"&parent="+location.hostname+"&autoplay=true";
+  if(s.type==="soop")
+    // showChat: SOOP embed가 서버사이드에서 채팅 유무를 렌더링하는 쿼리 파라미터.
+    // 공개판은 항상 이 iframe으로 재생하고, 채팅 아이콘으로 showChat만 켜고 끈다.
+    return "https://play.sooplive.com/"+s.id+(s.bno?"/"+s.bno:"")
+      +"/embed?autoPlay=true&showChat="+(s.chat?"true":"false");
+  if(s.type==="chzzk")
+    return "https://chzzk.naver.com/live/"+s.id;
+  return s.raw;
+}
+function fetchYtTitle(s){
+  fetch("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v="+s.id)
+    .then(r=>r.ok?r.json():null)
+    .then(j=>{ if(j&&j.title){ s.label="YouTube · "+j.title;
+      const el=board.querySelector('.tile[data-uid="'+s.uid+'"] b');
+      if(el) el.textContent=s.label; } })
+    .catch(()=>{});
+}
+
+/* ── 배치 ── */
+function place(el,x,y,w,h){
+  el.style.left=Math.round(x)+"px";
+  el.style.top=Math.round(y)+"px";
+  el.style.width=Math.round(Math.max(MINW,w))+"px";
+  el.style.height=Math.round(Math.max(MINH,h))+"px";
+}
+function tiles(){ return [...board.querySelectorAll(".tile")]; }
+function front(el){ el.style.zIndex=++topZ; }
+function syncSize(){ lastW=board.clientWidth; lastH=board.clientHeight; }
+
+/* items 순서대로 타일 DOM 요소를 돌려준다 — 배치는 항상 "번호 순서"를 따라야
+   헤더의 번호와 화면 위치가 어긋나지 않는다. tiles()(DOM 순서)는 swapTiles 가
+   items 만 바꾸기 때문에 순서가 다를 수 있어서 직접 쓰면 안 된다(2026-08-23). */
+function orderedTiles(){
+  return items.map(s=>board.querySelector('.tile[data-uid="'+s.uid+'"]')).filter(Boolean);
+}
+
+function arrangeTile(){
+  const ts=orderedTiles(), n=ts.length; if(!n) return;
+  const W=board.clientWidth, H=board.clientHeight;
+  const cols=Math.ceil(Math.sqrt(n)), rows=Math.ceil(n/cols);
+  const w=(W-G*(cols+1))/cols, h=(H-G*(rows+1))/rows;
+  ts.forEach((tl,i)=>{
+    const r=Math.floor(i/cols), c=i%cols;
+    tl.classList.remove("main");
+    place(tl, G+c*(w+G), G+r*(h+G), w, h);
+  });
+  syncSize();
+}
+function arrangeSpot(uid){
+  const ts=orderedTiles(), n=ts.length; if(!n) return;
+  const main=ts.find(t=>t.dataset.uid===String(uid)) || ts[0];
+  mainUid=main.dataset.uid;
+  const W=board.clientWidth, H=board.clientHeight;
+  const sideW=Math.max(190, Math.min(320, W*0.24));
+  const others=ts.filter(t=>t!==main);
+  const bigW = others.length ? (W-sideW-G*3) : (W-G*2);
+  ts.forEach(t=>t.classList.remove("main"));
+  main.classList.add("main");
+  place(main, G, G, bigW, H-G*2);
+  front(main);
+  if(others.length){
+    const sh=(H-G*(others.length+1))/others.length;
+    others.forEach((tl,i)=> place(tl, G*2+bigW, G+i*(sh+G), sideW, sh));
+  }
+  // 번호는 "화면에 배치된 순서"를 뜻하므로 items 순서도 같이 맞춘다 — 안 그러면
+  // 2번을 크게 봐서 왼쪽 첫 자리로 갔는데 헤더엔 여전히 2번으로 표시된다(2026-08-23).
+  reorderItems([main, ...others].map(t=>t.dataset.uid));
+  syncSize();
+}
+
+/* 화면 배치 순서(uid 배열)에 맞춰 items 를 재정렬하고 번호를 다시 그린다 */
+function reorderItems(uids){
+  const map=new Map(items.map(s=>[s.uid,s]));
+  const next=uids.map(u=>map.get(u)).filter(Boolean);
+  // 혹시 빠진 게 있으면 뒤에 붙여서 유실 방지
+  items.forEach(s=>{ if(!next.includes(s)) next.push(s); });
+  items=next;
+  paintNums();
+}
+function arrangeCascade(){
+  const ts=orderedTiles(), n=ts.length; if(!n) return;
+  const W=board.clientWidth, H=board.clientHeight;
+  const w=Math.min(760, W*0.6), h=Math.min(460, H*0.6);
+  const stepX=Math.min(46,(W-w-G*2)/Math.max(1,n-1));
+  const stepY=Math.min(40,(H-h-G*2)/Math.max(1,n-1));
+  ts.forEach((tl,i)=>{
+    tl.classList.remove("main");
+    place(tl, G+i*stepX, G+i*stepY, w, h);
+    tl.style.zIndex=++topZ;
+  });
+  syncSize();
+}
+// 창 크기가 바뀌면 타일들도 같은 비율로 따라간다
+function rescale(){
+  const W=board.clientWidth, H=board.clientHeight;
+  if(lastW>0 && lastH>0 && W>0 && H>0 && (W!==lastW || H!==lastH)){
+    const sx=W/lastW, sy=H/lastH;
+    tiles().forEach(tl=>place(tl, tl.offsetLeft*sx, tl.offsetTop*sy,
+                                 tl.offsetWidth*sx, tl.offsetHeight*sy));
+  }
+  lastW=W; lastH=H;
+}
+
+/* ── 이동/리사이즈 ── */
+function enableMove(tile, handle){
+  handle.addEventListener("pointerdown", e=>{
+    if(e.target.tagName==="BUTTON") return;
+    e.preventDefault();
+    const sx=e.clientX, sy=e.clientY;
+    const ox=tile.offsetLeft, oy=tile.offsetTop;
+    front(tile);
+    document.body.classList.add("busy");
+    const win=tile.ownerDocument.defaultView;
+    const mv=ev=>place(tile, ox+(ev.clientX-sx), oy+(ev.clientY-sy),
+                              tile.offsetWidth, tile.offsetHeight);
+    const up=()=>{ document.body.classList.remove("busy");
+      win.removeEventListener("pointermove",mv); win.removeEventListener("pointerup",up); };
+    win.addEventListener("pointermove",mv); win.addEventListener("pointerup",up);
+  });
+}
+function enableResize(tile, hd, dir){
+  hd.addEventListener("pointerdown", e=>{
+    e.preventDefault(); e.stopPropagation();
+    const sx=e.clientX, sy=e.clientY;
+    const ox=tile.offsetLeft, oy=tile.offsetTop;
+    const ow=tile.offsetWidth, oh=tile.offsetHeight;
+    front(tile);
+    document.body.classList.add("busy");
+    const win=tile.ownerDocument.defaultView;
+    const north=dir.includes("n"), west=dir.includes("w");
+    const mv=ev=>{
+      const dx=ev.clientX-sx, dy=ev.clientY-sy;
+      let w=ow, h=oh, x=ox, y=oy;
+      if(dir.includes("e")) w=ow+dx;
+      if(west)              w=ow-dx;
+      if(dir.includes("s")) h=oh+dy;
+      if(north)             h=oh-dy;
+      w=Math.max(MINW,w); h=Math.max(MINH,h);
+      if(west)  x=ox+(ow-w);
+      if(north) y=oy+(oh-h);
+      place(tile,x,y,w,h);
+    };
+    const up=()=>{ document.body.classList.remove("busy");
+      win.removeEventListener("pointermove",mv); win.removeEventListener("pointerup",up); };
+    win.addEventListener("pointermove",mv); win.addEventListener("pointerup",up);
+  });
+}
+
+/* ── 타일 생성 ── */
+/* ── 자리 교환 ──
+   번호 버튼을 누르면 두 타일의 "위치와 크기를 통째로 맞바꾼다". 바둑판으로 다시
+   정렬하는 게 아니라서, 애써 잡아둔 배치(예: 왼쪽 크게 + 오른쪽 작게)가 그대로
+   유지된 채 내용물만 서로 바뀐다 — 스포트라이트 자리에 다른 방송을 올리고 싶을 때
+   특히 자연스럽다(2026-08-23). */
+function swapTiles(uidA, uidB){
+  if(uidA===uidB) return;
+  const a=board.querySelector('.tile[data-uid="'+uidA+'"]');
+  const b=board.querySelector('.tile[data-uid="'+uidB+'"]');
+  if(!a||!b) return;
+  const ra={x:a.offsetLeft,y:a.offsetTop,w:a.offsetWidth,h:a.offsetHeight};
+  const rb={x:b.offsetLeft,y:b.offsetTop,w:b.offsetWidth,h:b.offsetHeight};
+  place(a, rb.x, rb.y, rb.w, rb.h);
+  place(b, ra.x, ra.y, ra.w, ra.h);
+  // main(스포트라이트 강조)도 자리를 따라가야 한다
+  const am=a.classList.contains("main"), bm=b.classList.contains("main");
+  a.classList.toggle("main", bm); b.classList.toggle("main", am);
+  if(mainUid===uidA) mainUid=uidB; else if(mainUid===uidB) mainUid=uidA;
+  // items 순서도 맞바꿔서 번호가 화면 배치와 일치하게 유지
+  const ia=items.findIndex(x=>x.uid===uidA), ib=items.findIndex(x=>x.uid===uidB);
+  if(ia>=0&&ib>=0){ const t=items[ia]; items[ia]=items[ib]; items[ib]=t; }
+  paintNums();
+}
+
+/* 각 타일 헤더의 번호 버튼을 현재 개수/순서에 맞춰 다시 그린다 */
+function paintNums(){
+  items.forEach((s,idx)=>{
+    const tile=board.querySelector('.tile[data-uid="'+s.uid+'"]');
+    if(!tile) return;
+    const box=tile.querySelector(".nums");
+    if(!box) return;
+    box.innerHTML = items.map((o,i)=>
+      '<button class="num'+(i===idx?" cur":"")+'" data-uid="'+o.uid+'" '
+      +'title="'+(i+1)+'번 자리와 바꾸기">'+(i+1)+'</button>').join("");
+    box.querySelectorAll(".num").forEach(btn=>{
+      btn.onclick=e=>{
+        e.stopPropagation();
+        swapTiles(s.uid, btn.dataset.uid);
+      };
+    });
+  });
+}
+
+/* ── SOOP 재생 (공개판, 2026-08-24) ──
+   봇 없이 여기저기(PC방 등)서 쓰는 독립 버전이라, 봇 API(/dash/api/stream)를 쓰는
+   HLS 직접재생이 원천적으로 불가능하다 — SOOP은 처음부터 항상 공식 embed iframe만
+   쓴다(makeTile 안에서 직접 생성). 대신 그게 원래 채팅까지 보여줄 수 있는 경로라
+   (showChat 파라미터) 아쉬운 대로 봇 있는 집 버전의 "채팅 버튼 켠 상태"가 기본이
+   되는 셈이다. iframe이 로컬 네트워크 권한이 필요해서(크롬 142+, 고화질 관련) 여긴
+   반드시 실제 신뢰된 HTTPS 주소로 배포해야 한다 — mkcert 자체 서명 인증서로는 다른
+   PC에서 안 먹힌다(그래서 이 공개판을 따로 만든 것). */
+
+function makeTile(s){
+  const tile=document.createElement("div");
+  tile.className="tile se-hint";
+  tile.dataset.uid=s.uid;
+  // 공개판(봇 없음) — SOOP도 항상 공식 embed iframe. 위 soopMakeIframe() 참고.
+  const media = '<iframe src="'+embedUrl(s)+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; local-network-access" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+  tile.innerHTML=
+    '<div class="th"><span class="dot '+s.type+'"></span><b>'+s.label+'</b>'
+    +'<span class="nums"></span>'
+    +'<span class="acts">'
+    // SOOP는 채팅 유무를 그 자리에서 켜고 끌 수 있다(showChat 파라미터로 iframe 재로드).
+    +(s.type==="soop" ? '<button class="chat'+(s.chat?" on":"")+'" title="'
+      +(s.chat?"채팅 숨기기":"채팅 보기")+'">💬</button>' : '')
+    +'<button class="big" title="크게 보기">크게</button>'
+    +'<button class="rl" title="새로고침">↻</button>'
+    +'<button class="cl" title="닫기">✕</button></span></div>'
+    +media
+    +['n','s','w','e','nw','ne','sw','se'].map(d=>'<div class="hd '+d+'" data-d="'+d+'"></div>').join("");
+
+  tile.querySelector(".cl").onclick=()=>{
+    tile.remove();
+    items=items.filter(x=>x.uid!==s.uid);
+    if(mainUid===s.uid) mainUid=items[0]?items[0].uid:null;
+    if(!items.length) showHint();
+    paintNums();   // 개수가 줄었으니 남은 타일들의 번호 버튼도 다시 그린다
+  };
+  tile.querySelector(".rl").onclick=()=>{ const f=tile.querySelector("iframe"); f.src=f.src; };
+  const chatBtn=tile.querySelector(".chat");
+  if(chatBtn) chatBtn.onclick=()=>{
+    s.chat=!s.chat;
+    chatBtn.classList.toggle("on",s.chat);
+    chatBtn.title=s.chat?"채팅 숨기기":"채팅 보기";
+    const f=tile.querySelector("iframe");
+    if(f) f.src=embedUrl(s);   // showChat 파라미터가 바뀌었으니 새 주소로 재로드
+  };
+  tile.querySelector(".big").onclick=()=>arrangeSpot(s.uid);
+
+  enableMove(tile, tile.querySelector(".th"));
+  tile.querySelectorAll(".hd").forEach(hd=>enableResize(tile,hd,hd.dataset.d));
+  tile.addEventListener("pointerdown",()=>front(tile));
+  return tile;
+}
+
+function showHint(){
+  if(board.querySelector(".hint")) return;
+  const h=document.createElement("div");
+  h.className="hint";
+  h.innerHTML='<div><strong>여러 방송을 한 화면에서</strong>'
+    +'SOOP 아이디를 입력하거나, 유튜브·트위치·치지직 주소를 붙여넣으세요.<br>'
+    +'예) <code>siiyeon</code> · <code>youtube.com/watch?v=...</code><br><br>'
+    +'제목 표시줄을 끌어 <strong style="display:inline">이동</strong>, '
+    +'모서리를 끌어 <strong style="display:inline">크기 조절</strong>할 수 있어요.</div>';
+  board.appendChild(h);
+}
+function hideHint(){ const h=board.querySelector(".hint"); if(h) h.remove(); }
+
+function addStream(s){
+  if(!s) return;
+  if(items.some(x=>x.type===s.type && x.id===s.id)) return;
+  s.uid="u"+(++seq);
+  items.push(s);
+  if(!mainUid) mainUid=s.uid;
+  hideHint();
+  const tile=makeTile(s);
+  board.appendChild(tile);
+  front(tile);
+  arrangeTile();                 // 추가할 때마다 일단 바둑판으로 정리
+  paintNums();                   // 개수가 늘었으니 모든 타일의 번호 버튼을 다시 그린다
+  if(s.type==="youtube") fetchYtTitle(s);
+}
+function add(raw){
+  const s=parse(raw);
+  if(!s){ alert("인식할 수 없는 주소예요."); return; }
+  addStream(s);
+}
+
+/* ── 입력창 (공개판) ──
+   봇이 없으니 닉네임 검색·방송 중 목록 자동 표시는 없다 — 아이디/주소를 직접 입력만
+   받는다(2026-08-24). */
+document.getElementById("add").onclick=()=>{
+  const el=document.getElementById("url"); add(el.value); el.value="";
+};
+document.getElementById("url").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){ add(e.target.value); e.target.value=""; }
+});
+document.getElementById("tile").onclick=arrangeTile;
+document.getElementById("spotBtn").onclick=()=>arrangeSpot(mainUid);
+document.getElementById("cascade").onclick=arrangeCascade;
+document.getElementById("clear").onclick=()=>{
+  tiles().forEach(t=>t.remove()); items=[]; mainUid=null; showHint();
+};
+
+/* ── 전체화면 ──
+   문서 전체(documentElement)가 아니라 board 만 전체화면으로 만든다 — 그래야 상단
+   툴바가 빠지고 영상 타일들만 화면을 꽉 채운다(원본 MultiPiP 와 같은 방식). */
+document.getElementById("fs").onclick=async()=>{
+  const doc=board.ownerDocument;
+  if(doc.fullscreenElement){ doc.exitFullscreen(); return; }
+  try{ await board.requestFullscreen(); }
+  catch(e){ alert("전체화면 진입에 실패했어요."); }
+};
+document.addEventListener("fullscreenchange",()=>{
+  document.getElementById("fs").classList.toggle("on",!!document.fullscreenElement);
+  setTimeout(rescale,150);
+});
+document.getElementById("fsExit").onclick=e=>{
+  e.stopPropagation();
+  const doc=board.ownerDocument;
+  if(doc.fullscreenElement) doc.exitFullscreen();
+};
+
+/* ── PiP (항상 위에 떠 있음, 원래 방식으로 복원) ──
+   유튜브 문제 고치려다가 이 기능 자체를 "새 창"으로 통째로 바꿔버렸었다 — 항상 위에
+   뜨는 건 지우면 안 되는 별개의 요구사항이었는데 물어보지도 않고 없앴다(2026-08-24
+   지적). 원본(MultiPiP)도 PiP 버튼과 새 창 버튼을 나란히 둘 다 갖고 있었던 걸 보면,
+   "PiP는 웬만하면 되지만 유튜브는 안 될 수 있다"는 걸 원본도 이미 받아들이고 두
+   버튼을 같이 준 것으로 보인다. 우리도 그렇게 되돌린다 — PiP 는 항상 위(SOOP·트위치는
+   문제없이 됨), 새 창은 유튜브까지 확실히 되는 대안. */
+const anchor=document.createComment("board");
+document.getElementById("pip").onclick=async()=>{
+  if(pipWin && !pipWin.closed){ pipWin.close(); return; }
+  if(!("documentPictureInPicture" in window)){
+    alert("이 브라우저는 Document PiP를 지원하지 않아요 (Chrome/Edge 116 이상). '새 창' 버튼을 대신 써주세요.");
+    return;
+  }
+  if(document.fullscreenElement) await document.exitFullscreen();
+  const w=Math.round((screen.availWidth||1280)*0.7);
+  const h=Math.round((screen.availHeight||720)*0.7);
+  pipWin=await documentPictureInPicture.requestWindow({width:w,height:h});
+  [...document.styleSheets].forEach(ss=>{
+    try{
+      const txt=[...ss.cssRules].map(r=>r.cssText).join("\n");
+      const st=pipWin.document.createElement("style"); st.textContent=txt;
+      pipWin.document.head.appendChild(st);
+    }catch(err){
+      if(ss.href){ const l=pipWin.document.createElement("link");
+        l.rel="stylesheet"; l.href=ss.href; pipWin.document.head.appendChild(l); }
+    }
+  });
+  pipWin.document.body.style.cssText="margin:0;height:100vh;background:#0f1115;overflow:hidden";
+  board.replaceWith(anchor);
+  pipWin.document.body.appendChild(board);
+  board.style.height="100vh";
+  document.getElementById("pip").classList.add("on");
+  setTimeout(rescale,150);
+  pipWin.addEventListener("resize",()=>rescale());
+  pipWin.addEventListener("pagehide",()=>{
+    anchor.replaceWith(board);
+    board.style.height="";
+    document.getElementById("pip").classList.remove("on");
+    pipWin=null;
+    setTimeout(rescale,150);
+  });
+};
+
+/* ── 새 창 (2026-08-24) ──
+   PiP(Document PiP, 위 참고)는 유튜브가 있으면 오류 152/153이 뜬다 — DOM을 다른
+   문서로 옮기는 방식 자체가 원인으로 보이는데, 여러 번 고쳐봐도 안 됐다. 이 버튼은
+   그 대안이다. 빈 창을 열고 거기로 iframe을 옮기는 게 아니라, "이 페이지 자체의
+   URL을 새 창에서 다시 연다"(window.open(자기 URL, ...)) — 완전히 정상적인 새
+   페이지 로딩이라 iframe도 그 페이지가 스스로 처음부터 만든다. 지금 보던 방송
+   목록은 쿼리스트링(?state=...)으로 넘긴다. 항상 위에 뜨진 않지만 유튜브까지
+   확실히 된다. */
+document.getElementById("newwin").onclick=()=>{
+  if(!items.length){ alert("먼저 방송을 추가해주세요."); return; }
+  const state=encodeURIComponent(JSON.stringify(items.map(({uid,...s})=>s)));
+  const url=location.pathname+"?state="+state;
+  const w=Math.round((screen.availWidth||1280)*0.7);
+  const h=Math.round((screen.availHeight||720)*0.7);
+  const win=window.open(url, "_blank", `popup=yes,width=${w},height=${h}`);
+  if(!win){
+    alert("팝업이 차단됐어요. 브라우저 주소창의 팝업 차단 아이콘을 눌러 이 사이트는 허용해주세요.");
+    return;
+  }
+  // 새 창으로 옮겨간 것처럼 원래 화면은 비운다(같은 방송을 두 창에서 중복 재생하지 않게).
+  tiles().forEach(t=>t.remove());
+  items=[]; mainUid=null;
+  showHint();
+};
+
+/* 페이지가 처음 열릴 때 ?state= 가 있으면(새 창 버튼이 넘긴 것) 그 목록을 그대로
+   복원한다 — 새로 뜬 이 페이지 자신이 iframe을 처음부터 만드니 재배치 이력이 없다. */
+(function restoreFromUrl(){
+  const q=new URLSearchParams(location.search);
+  const raw=q.get("state");
+  if(!raw) return;
+  try{
+    const list=JSON.parse(raw);
+    list.forEach(s=>addStream(Object.assign({},s)));
+  }catch(e){ /* 손상된 값이면 그냥 빈 화면으로 시작 */ }
+  history.replaceState(null,"",location.pathname);   // 주소창에서 지저분한 쿼리 제거
+})();
+
+window.addEventListener("resize",()=>rescale());
+if(!items.length) showHint();   // 위에서 ?state= 로 이미 복원됐으면 빈 화면 안내를 덮어쓰지 않는다
+syncSize();
+</script>
+</body>
+</html>
